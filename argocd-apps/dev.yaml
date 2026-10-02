@@ -10,7 +10,7 @@ spec:
   
   source:
     repoURL: https://github.com/RodrigoGoncalves-dev/nginx-k8s.git
-    targetRevision: HEAD
+    targetRevision: develop
     path: helm/nginx-k8s
     helm:
       valueFiles:
