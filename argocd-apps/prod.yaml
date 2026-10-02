@@ -17,6 +17,7 @@ spec:
         - environments/production/values.yaml
   
   destination:
+    server: https://kubernetes.default.svc
     namespace: web-prod
   
   syncPolicy:
