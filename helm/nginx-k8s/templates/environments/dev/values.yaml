@@ -1,11 +1,9 @@
 # Number of NGINX pods to run.
 replicaCount: 1
-
 image:
   repository: nginx
-  tag: "1.19.1"
+  tag: "5eb67002626b320d436e4d9cc40a55ad90d327e6"
   pullPolicy: IfNotPresent
-
 exporter:
   enabled: true
   image:
@@ -20,19 +18,15 @@ exporter:
     limits:
       cpu: "0.3"
       memory: 128Mi
-
 service:
   type: ClusterIP
   port: 9113
-
 # These annotations allow Prometheus installations using pod discovery to
 # scrape the exporter directly.
 podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "9113"
-
 resources: {}
-
 nginxConfig: |
   server {
     listen 80;
