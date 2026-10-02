@@ -2,7 +2,7 @@
 replicaCount: 1
 image:
   repository: nginx
-  tag: "9f8c62376fae6ed7b68c72ebdd4a17e9f5fa6cc8"
+  tag: "1.19.1"
   pullPolicy: IfNotPresent
 exporter:
   enabled: true
