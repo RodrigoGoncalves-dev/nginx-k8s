@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nginx-k8s.fullname" . }}
+  labels:
+    {{- include "nginx-k8s.labels" . | nindent 4 }}
+data:
+  nginx.conf: |
+{{ .Values.nginxConfig | indent 4 }}
