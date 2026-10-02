@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: web-app-staging
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  
+  source:
+    repoURL: https://github.com/RodrigoGoncalves-dev/nginx-k8s.git
+    targetRevision: HEAD
+    path: helm/nginx-k8s
+    helm:
+      valueFiles:
+        - environments/staging/values.yaml
+  
+  destination:
+    namespace: web-staging
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground

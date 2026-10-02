@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+    tags:
+      - '*'
+  pull_request:
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+
+jobs:
+  build:
+    name: Build and publish image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+  test:
+    name: Lint and render Helm chart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+
+      - name: Lint chart
+        run: helm lint helm/nginx-k8s
+
+      - name: Render chart
+        run: helm template nginx helm/nginx-k8s
+
+  deploy-dev:
+    name: Update development image
+    needs: [build, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update image tag
+        uses: mikefarah/yq@v4.44.3
+        with:
+          cmd: yq -i '.image.tag = strenv(GITHUB_SHA)' helm/nginx-k8s/templates/environments/dev/values.yaml
+
+      - name: Commit and push change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add helm/nginx-k8s/templates/environments/dev/values.yaml
+          git diff --cached --quiet || git commit -m "Update dev image to ${GITHUB_SHA}"
+          git push origin main
+
+  deploy-prod:
+    name: Update production image
+    needs: [build, test]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update image tag
+        uses: mikefarah/yq@v4.44.3
+        env:
+          IMAGE_TAG: ${{ github.ref_name }}
+        with:
+          cmd: yq -i '.image.tag = strenv(IMAGE_TAG)' helm/nginx-k8s/templates/environments/prod/values.yaml
+
+      - name: Commit and push change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add helm/nginx-k8s/templates/environments/prod/values.yaml
+          git diff --cached --quiet || git commit -m "Update prod image to ${GITHUB_REF_NAME}"
+          git push origin main
