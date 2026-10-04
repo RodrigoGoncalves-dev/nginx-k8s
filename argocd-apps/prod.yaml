@@ -7,19 +7,19 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  
+
   source:
     repoURL: https://github.com/RodrigoGoncalves-dev/nginx-k8s.git
-    targetRevision: HEAD
+    targetRevision: main
     path: helm/nginx-k8s
     helm:
       valueFiles:
-        - environments/production/values.yaml
-  
+        - environments/prod/values.yaml
+
   destination:
     server: https://kubernetes.default.svc
     namespace: web-prod
-  
+
   syncPolicy:
     automated:
       prune: true
@@ -27,3 +27,4 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
+
